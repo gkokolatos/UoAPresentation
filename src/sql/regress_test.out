@@ -1,0 +1,116 @@
+psql:src/sql/regress_test.sql:12: ERROR:  new row for relation "vehicles" violates check constraint "valid_fleet_identifier"
+DETAIL:  Failing row contains (1, aaa-001).
+psql:src/sql/regress_test.sql:12: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES ('aaa-001');
+psql:src/sql/regress_test.sql:15: ERROR:  new row for relation "vehicles" violates check constraint "valid_fleet_identifier"
+DETAIL:  Failing row contains (2, AAA-001 ).
+psql:src/sql/regress_test.sql:15: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES ('AAA-001 ');
+psql:src/sql/regress_test.sql:18: ERROR:  new row for relation "vehicles" violates check constraint "valid_fleet_identifier"
+DETAIL:  Failing row contains (3, AAAA-01).
+psql:src/sql/regress_test.sql:18: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES ('AAAA-01');
+psql:src/sql/regress_test.sql:19: ERROR:  new row for relation "vehicles" violates check constraint "valid_fleet_identifier"
+DETAIL:  Failing row contains (4, AAA-01A).
+psql:src/sql/regress_test.sql:19: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES ('AAA-01A');
+psql:src/sql/regress_test.sql:20: ERROR:  new row for relation "vehicles" violates check constraint "valid_fleet_identifier"
+DETAIL:  Failing row contains (5,  AA-010).
+psql:src/sql/regress_test.sql:20: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES (' AA-010');
+psql:src/sql/regress_test.sql:21: ERROR:  new row for relation "vehicles" violates check constraint "valid_fleet_identifier"
+DETAIL:  Failing row contains (6, AAA+001).
+psql:src/sql/regress_test.sql:21: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES ('AAA+001');
+INSERT 0 1
+psql:src/sql/regress_test.sql:27: ERROR:  duplicate key value violates unique constraint "vehicles_fleet_id_key"
+DETAIL:  Key (fleet_id)=(AAA-000) already exists.
+psql:src/sql/regress_test.sql:27: STATEMENT:  INSERT INTO vehicles (fleet_id) VALUES ('AAA-000');
+ fleet_id |    state     
+----------+--------------
+ AAA-000  | commissioned
+(1 row)
+
+psql:src/sql/regress_test.sql:52: ERROR:  invalid input value for enum vehicle_state_enum: "invalid"
+LINE 5:  'invalid'
+         ^
+psql:src/sql/regress_test.sql:52: STATEMENT:  INSERT INTO
+	vehicle_state (vehicle_id, state)
+VALUES (
+	(SELECT id FROM vehicles WHERE fleet_id = 'AAA-000'),
+	'invalid'
+);
+psql:src/sql/regress_test.sql:61: ERROR:  duplicate key value violates unique constraint "vehicle_state_vehicle_id_timestamp_state_key"
+DETAIL:  Key (vehicle_id, "timestamp", state)=(7, 2025-04-25 14:50:13.168698+02, commissioned) already exists.
+psql:src/sql/regress_test.sql:61: STATEMENT:  INSERT INTO
+	vehicle_state (vehicle_id, timestamp, state)
+VALUES (
+	(SELECT id FROM vehicles WHERE fleet_id = 'AAA-000'),
+	(SELECT timestamp FROM vehicle_state WHERE state = 'commissioned'),
+	'commissioned'
+);
+psql:src/sql/regress_test.sql:73: ERROR:  Location (POINT(2024724.3888534778 3007855.7431474472)) out of bounds
+HINT:  Please check that the location is within Lesvos
+CONTEXT:  PL/pgSQL function fn_location_check() line 14 at RAISE
+psql:src/sql/regress_test.sql:73: STATEMENT:  INSERT INTO
+	vehicle_location (vehicle_id, location)
+VALUES (
+	(SELECT id FROM vehicles WHERE fleet_id = 'AAA-000'),
+	ST_Transform(ST_Point(39.177156, 26.373316, 4326), 2100)
+);
+INSERT 0 1
+ fleet_id |    state     |               location WGS84                
+----------+--------------+---------------------------------------------
+ AAA-000  | commissioned | POINT(26.373315987937836 39.17715598285773)
+(1 row)
+
+DELETE 1
+               location WGS84                
+---------------------------------------------
+ POINT(26.373315987937836 39.17715598285773)
+(1 row)
+
+psql:src/sql/regress_test.sql:132: ERROR:  Location (POINT(2024724.3888534778 3007855.7431474472)) out of bounds
+HINT:  Please check that the location is within Lesvos
+CONTEXT:  PL/pgSQL function fn_location_check() line 14 at RAISE
+psql:src/sql/regress_test.sql:132: STATEMENT:  INSERT INTO
+	emergencies (location, description)
+VALUES (
+	ST_Transform(ST_Point(39.177156, 26.373316, 4326), 2100),
+	'Διαβολόρεμα πλημμύρα'
+);
+INSERT 0 1
+ success 
+---------
+ t
+(1 row)
+
+psql:src/sql/regress_test.sql:163: ERROR:  invalid input value for enum emergency_state_enum: "invalid"
+LINE 5:  'invalid'
+         ^
+psql:src/sql/regress_test.sql:163: STATEMENT:  INSERT INTO
+	emergency_state (emergency_id, state)
+VALUES (
+	(SELECT id FROM emergencies WHERE description = 'Διαβολόρεμα πλημμύρα'),
+	'invalid'
+);
+psql:src/sql/regress_test.sql:176: ERROR:  Vehicle (7) has invalid state (commissioned)
+HINT:  Valid state is "on duty"
+CONTEXT:  PL/pgSQL function fn_emergency_vehicle_status() line 21 at RAISE
+psql:src/sql/regress_test.sql:176: STATEMENT:  INSERT INTO
+	emergency_vehicles (emergency_id, vehicle_id, status)
+VALUES (
+	(SELECT id FROM emergencies WHERE description = 'Διαβολόρεμα πλημμύρα'),
+	(SELECT id FROM vehicles WHERE fleet_id = 'AAA-000'),
+	'attached'
+);
+INSERT 0 1
+INSERT 0 1
+ ?column? 
+----------
+ t
+(1 row)
+
+INSERT 0 1
+ ?column? 
+----------
+ t
+(1 row)
+
+INSERT 0 1
+psql:src/sql/regress_test.sql:247: NOTICE:  Vehicle with fleet_id AAA-000 will be automatically detached from emergency 2
+INSERT 0 1
