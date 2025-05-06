@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+	<meta name="generator" content="pandoc" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta name="description" content="PostgreSQL Presentation for UoA">
+
+	<meta name="author" content="Georgios Kokolatos" />
+
+	<title>Setting up</title>
+
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/custom.css" rel="stylesheet">
+
+	<meta name="theme-color" content="#712cf9">
+
+	<script>
+		let inited = false;
+		let baseFont = 0;
+		let baseMarginTop = 0;
+		let baseMarginBottom = 0;
+		let basePaddingTop = 0;
+		let basePaddingBottom = 0;
+
+		function setContentWidth(value) {
+			const container = document.getElementsByClassName("container");
+			for (let i = 0; i < container.length; i++) {
+				container[i].style.maxWidth = value;
+					console.log(container[i].style.maxWidth);
+				}
+				setReferences("pw", value);
+		}
+
+		function setReference(id, name, val) {
+			const ref = document.getElementById(id);
+			if (ref !== "" && ref !== undefined && ref !== null) {
+				let href = new URL(ref.href);
+				let params =  new URLSearchParams(href.search);
+
+				params.set(name, val);
+				href.search = params.toString();
+				ref.href = href.toString();
+			}
+		}
+
+		function setReferences(name, val) {
+			setReference("next_chapter", name, val);
+			setReference("prev_chapter", name, val);
+		}
+
+		function initParams() {
+			initFontSize();
+
+			const params = new URLSearchParams(window.location.search);
+			let pw = params.get("pw");
+			if (pw !== null) {
+				setContentWidth(pw);
+			}
+		}
+
+		function getRootVariable(name) {
+			return parseInt(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+		}
+
+		function setRootVariable(name, value) {
+			document.documentElement.style.setProperty(name, value);
+		}
+
+		function updateSizingVariables(multiplier) {
+			if (inited == false) {
+				baseFont = getRootVariable('--base-font-size');
+				baseMarginTop = getRootVariable('--base-margin-top');
+				baseMarginBottom = getRootVariable('--base-margin-bottom');
+				basePaddingTop = getRootVariable('--base-padding-top');
+				basePaddingBottom = getRootVariable('--base-padding-bottom');
+				inited = true;
+			}
+			setRootVariable('--base-font-size', (baseFont + multiplier) + 'px');
+			setRootVariable('--base-margin-top', (baseMarginTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-margin-bottom', (baseMarginBottom + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-top', (basePaddingTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-bottom', (basePaddingBottom + multiplier * 1.3) + 'px');
+		}
+
+		function initFontSize() {
+			const params = new URLSearchParams(window.location.search);
+			let fs = Number(params.get("fs")) || 0;
+			let fontSizeSlider = document.getElementById("fontSizeSlider");
+
+			fontSizeSlider.value = fs;
+			updateSizingVariables(fs);
+			setReferences("fs", fs);
+
+			fontSizeSlider.addEventListener("input", function () {
+				const val = parseInt(fontSizeSlider.value);
+
+				updateSizingVariables(val);
+				setReferences("fs", val);
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", (event) => {
+			initParams();
+		});
+	</script>
+</head>
+<body>
+	<div class="container shadow-lg py-0 px-3 mb-5 rounded">
+		<!-- Navbar -->
+		<header class="sticky-top">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="./chapter1.html">UoA PostgreSQL</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+							data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+							aria-expanded="false" aria-label="Toggle navigation"
+					>
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarNavDropdown">
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Contents
+								</a>
+								<ul class="dropdown-menu">
+																		<li>
+										<a class="dropdown-item" href="#setting-up">2. Setting up</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#installation">2.1 Installation</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#initialization">2.2 Initialization</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#proper-initialization">2.3 Proper
+initialization</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#create-the-database">2.4 Create the
+database</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#retrieving-osm-data">2.5 Retrieving OSM
+data</a>
+									</li>
+																	</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown position-static">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Adjust Font Size
+								</a>
+								<ul class="dropdown-menu w-100 mt-0">
+									<li class="p-1 m-1">
+										<input type="range" class="form-range" min="0" max="40" step="2" id="fontSizeSlider">
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Width
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('960px')">Narrow</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('1200px')">Large</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('80%')">Extra large</button>
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<!-- Prev and next links -->
+						<ul class="navbar-nav ms-auto">
+														<li class="nav-item">
+								<a class="nav-link" id="prev_chapter" href="chapter1.html" title="Previous Chapter: Introduction">
+									&larr; Introduction
+								</a>
+							</li>
+																					<li class="nav-item">
+								<a class="nav-link" id="next_chapter" href="chapter3.html" title="Next Chapter: Schemata">
+									Schemata &rarr;
+								</a>
+							</li>
+													</ul>
+
+					</div>
+				</div>
+			</nav>
+		</header>
+
+		<div id="content" class="content">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="body span12 content" role="main">
+					<!-- Pandoc body -->
+					<h1 id="setting-up">2. Setting up</h1>
+<p>The goal is to generate an environment which gives access to a
+dedicated PostgreSQL server with a dedicated database, all third party
+binaries, OpenStreetMap data.</p>
+<p>A key aspect is to have a replicable environment which can be
+destroyed and recreated automatically.</p>
+<p>By far the most common OS is a *NIX flavour. We will be using Ubuntu
+as it is a very popular one.</p>
+<h2 id="installation">2.1 Installation</h2>
+<p>To install basic packages, assuming an Ubuntu or Debian *NIX variant,
+first update repository sources</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://www.postgresql.org/media/keys/ACCC4CF8.asc <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sudo</span> apt-key add <span class="at">-</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sh <span class="at">-c</span> <span class="st">&#39;echo &quot;deb http://apt.postgresql.org/pub/repos/apt/ \</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">    $(lsb_release -cs)-pgdg main&quot; &gt; /etc/apt/sources.list.d/pgdg.list&#39;</span></span></code></pre></div>
+<p>Then, install PostgreSQL, PostGIS, pgRouting, and the importing
+tools.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="at">-y</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    postgresql-17 <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    postgresql-17-cron <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    postgresql-17-postgis-3 <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    postgresql-17-postgis-3-scripts <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    postgresql-17-pgrouting <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    osm2pgsql <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    osm2pgrouting</span></code></pre></div>
+<h2 id="initialization">2.2 Initialization</h2>
+<p>Probably your PostgreSQL server is already running. Stop it and
+create a local instance during development. Most probably you need to
+add the newly installed binaries in your path.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span>/usr/lib/postgresql/17/bin:<span class="va">$PATH</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_ctl</span> <span class="at">-D</span> /var/lib/postgresql/17/main stop</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_ctl</span> <span class="at">-D</span> ./data initdb</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&lt;&lt;EOF</span> <span class="op">&gt;&gt;</span> ./data/postgresql.conf</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="st">shared_preload_libraries = &#39;pg_cron&#39;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="st">cron.database_name = &#39;emergency_vehicles_lesbos&#39;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_ctl</span> <span class="at">-D</span> ./data <span class="at">-l</span> ./data/startup.log start</span></code></pre></div>
+<h2 id="proper-initialization">2.3 Proper initialization</h2>
+<p>Obviously one would like to set the appropriate timezones,
+permissions, certificates, etc. You can read more <a
+href="https://www.postgresql.org/docs/current/ssl-tcp.html">in the
+docs</a>.</p>
+<h2 id="create-the-database">2.4 Create the database</h2>
+<p>Create the database for the project using the Hellenic locale for
+collations and UTF8 encoding.</p>
+<p>Note the use of <em>template0</em>, which is the pristine template.
+By default <em>template1</em> is used. However it will not allow to
+alter the default encoding and locales used during <em>initdb</em>. By
+using <em>template0</em> one is able to create a database without any
+local modifications. Additionally, it is a good practice to use
+<em>template0</em> when restoring a dump generated by
+<em>pg_dump</em>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="at">-c</span> <span class="st">&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="st">    CREATE DATABASE</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="st">        emergency_vehicles_lesbos</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="st">    ENCODING UTF8</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="st">    LOCALE &#39;el_GR.UTF8&#39;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">    TEMPLATE template0</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span> postgres://georgios@localhost/postgres</span></code></pre></div>
+<p>Do not forget to add a description for future users.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="at">-c</span> <span class="st">&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="st">    COMMENT ON DATABASE</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="st">        emergency_vehicles_lesbos</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="st">    IS</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="st">        &#39;Development database for emergency vehicle coordination project&#39;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span> postgres://georgios@localhost/postgres</span></code></pre></div>
+<h2 id="retrieving-osm-data">2.5 Retrieving OSM data</h2>
+<p>OpenStreetMap provides the <a
+href="https://wiki.openstreetmap.org/wiki/Overpass_API">overpass
+API</a>. Use a rough bounding box around Lesbos to download all the data
+for the island.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">BBOX</span><span class="op">=</span><span class="st">&quot;25.5619,38.8501,26.9194,39.5453&quot;</span><span class="kw">;</span> <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--output</span> <span class="st">&quot;osm/Lesbos.osm&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;http://www.overpass-api.de/api/xapi?*\[bbox=</span><span class="va">${BBOX}</span><span class="st">\]\[@meta\]&quot;</span></span></code></pre></div>
+					<!-- Endi of Pandoc body -->
+					</div>
+			</div>
+
+			<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+				<p class="col-md-4 mb-0 text-body-secondary">
+					© 2025 Georgios Kokolatos
+				</p>
+				<p class="col-md-4 mb-0 text-body-secondary">
+					<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer">
+						CC BY-NC-SA 4.0
+					</a>
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="">
+				</p>
+				<ul class="nav col-md-4 justify-content-end">
+					<li class="nav-item">
+						<a href="#" class="nav-link px-2 text-body-secondary">Back to top</a>
+					</li>
+				</ul>
+			</footer>
+		</div>
+	</div>
+	<script src="./js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

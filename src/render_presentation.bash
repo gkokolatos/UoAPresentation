@@ -65,7 +65,7 @@ main() {
 		[ -e "$file" ] || continue
 		echo "Generating $(basename ${file%.*}).html"
 		if ! pandoc -s --template presentation/templates/base.tmpl \
-				"$file" -o dest/"$(basename ${file%.*})".html
+				"$file" -o "$dest"/"$(basename ${file%.*})".html
 		then
 			echo "Failed to process $file"
 			exit 1

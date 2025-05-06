@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+	<meta name="generator" content="pandoc" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta name="description" content="PostgreSQL Presentation for UoA">
+
+	<meta name="author" content="Georgios Kokolatos" />
+
+	<title>Vehicle log</title>
+
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/custom.css" rel="stylesheet">
+
+	<meta name="theme-color" content="#712cf9">
+
+	<script>
+		let inited = false;
+		let baseFont = 0;
+		let baseMarginTop = 0;
+		let baseMarginBottom = 0;
+		let basePaddingTop = 0;
+		let basePaddingBottom = 0;
+
+		function setContentWidth(value) {
+			const container = document.getElementsByClassName("container");
+			for (let i = 0; i < container.length; i++) {
+				container[i].style.maxWidth = value;
+					console.log(container[i].style.maxWidth);
+				}
+				setReferences("pw", value);
+		}
+
+		function setReference(id, name, val) {
+			const ref = document.getElementById(id);
+			if (ref !== "" && ref !== undefined && ref !== null) {
+				let href = new URL(ref.href);
+				let params =  new URLSearchParams(href.search);
+
+				params.set(name, val);
+				href.search = params.toString();
+				ref.href = href.toString();
+			}
+		}
+
+		function setReferences(name, val) {
+			setReference("next_chapter", name, val);
+			setReference("prev_chapter", name, val);
+		}
+
+		function initParams() {
+			initFontSize();
+
+			const params = new URLSearchParams(window.location.search);
+			let pw = params.get("pw");
+			if (pw !== null) {
+				setContentWidth(pw);
+			}
+		}
+
+		function getRootVariable(name) {
+			return parseInt(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+		}
+
+		function setRootVariable(name, value) {
+			document.documentElement.style.setProperty(name, value);
+		}
+
+		function updateSizingVariables(multiplier) {
+			if (inited == false) {
+				baseFont = getRootVariable('--base-font-size');
+				baseMarginTop = getRootVariable('--base-margin-top');
+				baseMarginBottom = getRootVariable('--base-margin-bottom');
+				basePaddingTop = getRootVariable('--base-padding-top');
+				basePaddingBottom = getRootVariable('--base-padding-bottom');
+				inited = true;
+			}
+			setRootVariable('--base-font-size', (baseFont + multiplier) + 'px');
+			setRootVariable('--base-margin-top', (baseMarginTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-margin-bottom', (baseMarginBottom + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-top', (basePaddingTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-bottom', (basePaddingBottom + multiplier * 1.3) + 'px');
+		}
+
+		function initFontSize() {
+			const params = new URLSearchParams(window.location.search);
+			let fs = Number(params.get("fs")) || 0;
+			let fontSizeSlider = document.getElementById("fontSizeSlider");
+
+			fontSizeSlider.value = fs;
+			updateSizingVariables(fs);
+			setReferences("fs", fs);
+
+			fontSizeSlider.addEventListener("input", function () {
+				const val = parseInt(fontSizeSlider.value);
+
+				updateSizingVariables(val);
+				setReferences("fs", val);
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", (event) => {
+			initParams();
+		});
+	</script>
+</head>
+<body>
+	<div class="container shadow-lg py-0 px-3 mb-5 rounded">
+		<!-- Navbar -->
+		<header class="sticky-top">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="./chapter1.html">UoA PostgreSQL</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+							data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+							aria-expanded="false" aria-label="Toggle navigation"
+					>
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarNavDropdown">
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Contents
+								</a>
+								<ul class="dropdown-menu">
+																		<li>
+										<a class="dropdown-item" href="#vehicle-log">5. Vehicle log</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#the-base-relation">5.1 The base
+relation</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#possible-states">5.2 Possible states</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#the-initial-state-problem">5.3 The
+initial state problem</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#vehicle-location-log">5.4 Vehicle
+location log</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#vehicle-location-validator">5.5 Vehicle
+location validator</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#vehicle-location-archiver">5.6 Vehicle
+location archiver</a>
+									</li>
+																	</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown position-static">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Adjust Font Size
+								</a>
+								<ul class="dropdown-menu w-100 mt-0">
+									<li class="p-1 m-1">
+										<input type="range" class="form-range" min="0" max="40" step="2" id="fontSizeSlider">
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Width
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('960px')">Narrow</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('1200px')">Large</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('80%')">Extra large</button>
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<!-- Prev and next links -->
+						<ul class="navbar-nav ms-auto">
+														<li class="nav-item">
+								<a class="nav-link" id="prev_chapter" href="chapter4.html" title="Previous Chapter: Import
+OSM Data">
+									&larr; Import OSM Data
+								</a>
+							</li>
+																					<li class="nav-item">
+								<a class="nav-link" id="next_chapter" href="chapter6.html" title="Next Chapter: Emergencies">
+									Emergencies &rarr;
+								</a>
+							</li>
+													</ul>
+
+					</div>
+				</div>
+			</nav>
+		</header>
+
+		<div id="content" class="content">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="body span12 content" role="main">
+					<!-- Pandoc body -->
+					<h1 id="vehicle-log">5 Vehicle log</h1>
+<p><strong>As a user I want to</strong>:</p>
+<ul>
+<li>be able to add new and list existing vehicles in the fleet</li>
+<li>quickly know their availability</li>
+<li>quickly know their current location</li>
+</ul>
+<p><strong>So that</strong>:</p>
+<ul>
+<li>I can have an overview of the fleet at any moment</li>
+</ul>
+<p><strong>Because</strong>:</p>
+<ul>
+<li>I need to be able to respond to emergencies efficiently</li>
+</ul>
+<h3 id="problem-definitions">Problem definitions</h3>
+<ul>
+<li>A vehicle is defined by its <strong><em>unique alphanumeric
+identifier</em></strong>, having a pattern of three uppercase letters
+followed by a dash followed by three digits</li>
+<li>A vehicle <strong><em>must</em></strong> have <strong><em>one and
+only one</em></strong> of the following states on any given time:
+<ul>
+<li>commissioned - <em>the initial state</em></li>
+<li>decommissioned - <em>eg: undergoing service</em></li>
+<li>on duty - <em>manned and ready to serve</em></li>
+<li>off duty - <em>unmanned</em></li>
+<li>assigned - <em>currently on an emergency</em></li>
+</ul></li>
+<li>We do not expect many vehicles, in the ballpark of tens</li>
+<li>We do expect a handful of state changes per day</li>
+<li>Each vehicle is equipped with a tracker which pings in predefined
+intervals its location.</li>
+<li>Each vehicle must be in Lesbos mainland</li>
+</ul>
+<h2 id="the-base-relation">5.1 The base relation</h2>
+<p>Already from the problem definition becomes apparent that we can not
+express it all in a single relation. The base relation
+<strong><em>should</em></strong> contain:</p>
+<ul>
+<li>The identifier for the vehicle</li>
+</ul>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> vehicles (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> serial <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    fleet_id <span class="dt">varchar</span>(<span class="dv">8</span>) <span class="kw">UNIQUE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CONSTRAINT</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        valid_fleet_identifier</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">CHECK</span> (</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        fleet_id ~ <span class="st">&#39;^[A-Z]{3}-[0-9]{3}$&#39;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    vehicles</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Base relation for vehicles&#39;</span>;</span></code></pre></div>
+</details>
+<h2 id="possible-states">5.2 Possible states</h2>
+<p>It is not uncommon free text, or integer values to be used for such
+state representations. Those are esoteric to the code and prone to
+errors as they lack validity guarantees. Enumerated types solve this
+problem elegantly and efficiently.</p>
+<details>
+<summary>
+Enumerations
+</summary>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    vehicle_state_enum </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span> ENUM (</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;commissioned&#39;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;decommissioned&#39;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;on duty&#39;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;off duty&#39;</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;assigned&#39;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TYPE</span> vehicle_state_enum <span class="kw">IS</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;This enumerated type represents possible states of a vehicle in the fleet:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="st"> - commissioned: The vehicle is active and ready for assignment.</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="st"> - decommissioned: The vehicle is currently not in active use.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="st"> - on duty: The vehicle is currently active in the field.</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="st"> - off duty: The vehicle is idle.</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="st"> - assigned: The vehicle has been assigned to an emergency.</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;</span>;</span></code></pre></div>
+</details>
+<p>Now we can use the newly created type in the table. The relation
+<strong><em>should</em></strong> contain:</p>
+<ul>
+<li>The vehicle identifier</li>
+<li>The date and time of the state change</li>
+<li>The state</li>
+</ul>
+<p><strong><em>Note</em></strong>: Since we do not expect this table to
+grow too much, about 50 vehicles undergoing 20 state changes a day will
+result in a table size of ~5GB in 100 years, we do not need a special
+strategy.</p>
+<details>
+<summary>
+Vehicle state table
+</summary>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> vehicle_state (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    state_id serial <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    vehicle_id <span class="dt">integer</span> <span class="kw">REFERENCES</span> vehicles (<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="fu">CURRENT_TIMESTAMP</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    state vehicle_state_enum <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (vehicle_id, <span class="dt">timestamp</span>, state)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    vehicle_state</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;A log for the state of each vehicle at a given time&#39;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+</details>
+<h2 id="the-initial-state-problem">5.3 The initial state problem</h2>
+<p>The problem definition above states that the initial state of a
+vehicle is <strong><em>‘commissioned’</em></strong>. One can remember to
+implement an insertion on the second table, or ask PostgreSQL to do it
+for her, which will handle all the error cases much more graciously.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> fn_vehicle_initial_state()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">TRIGGER</span> <span class="kw">AS</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        vehicle_state (vehicle_id, state)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">NEW</span>.<span class="kw">id</span>, <span class="st">&#39;commissioned&#39;</span>);</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql;</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    after_insert_vehicles</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">AFTER</span> <span class="kw">INSERT</span> <span class="kw">ON</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    vehicles</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    fn_vehicle_initial_state();</span></code></pre></div>
+<p>A couple of notes:</p>
+<ul>
+<li>We want an AFTER action because otherwise the foreign key constrain
+will fail as the row is not yet inserted</li>
+<li>Both insert action happen on the same transaction horizon, obviously
+not the same ctid though</li>
+<li>Both inserts have to succeed otherwise, both inserts fail. This
+guarantees that there will not be vehicle entries without at least one
+vehicle_state entry</li>
+</ul>
+</details>
+<h2 id="vehicle-location-log">5.4 Vehicle location log</h2>
+<p>For the location log though, we expect a substantial amount of
+inserts. However only the latest few entries will be necessary for the
+day to day operations. The rest we can move away into an archive which
+can be used for analytical business queries.</p>
+<p>The relation <strong><em>should</em></strong> contain:</p>
+<ul>
+<li>The vehicle identifier</li>
+<li>The date and time of the ping from the tracker</li>
+<li>The location of the vehicle</li>
+</ul>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> vehicle_location (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    location_id bigserial <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    vehicle_id <span class="dt">integer</span> <span class="kw">REFERENCES</span> vehicles (<span class="kw">id</span>) <span class="kw">ON</span> <span class="kw">DELETE</span> <span class="kw">CASCADE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="fu">CURRENT_TIMESTAMP</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    location geometry(POINT, <span class="dv">2100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>, <span class="co">-- The Hellenic SRID, EGSA87</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (vehicle_id, <span class="dt">timestamp</span>, location)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    vehicle_location</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;A log for the location of each vehicle at a given time&#39;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+</details>
+<h2 id="vehicle-location-validator">5.5 Vehicle location validator</h2>
+<p>We <strong><em>must</em></strong> make certain that we do not
+register invalid locations.</p>
+<p>We can not, and really should not, use <strong><em>CHECK
+constraints</em></strong>. They can not reference data on other tables.
+They <strong><em>must</em></strong> be immutable, meaning that the same
+input should always generate the same result. If they depend on other
+data then that requirement will fail when the dependent data
+changes.</p>
+<p>If all what we need is to guarantee that the data on the time of
+insertion are correct, then a before insert trigger would do the job.
+That would also make certain that dump and restore would work, as
+triggers are deactivated during restore and are only enabled at the end
+of the restore process.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> fn_location_check ()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">TRIGGER</span> <span class="kw">AS</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    check_way osm_raw_data.planet_osm_polygon.way<span class="dt">%TYPE</span>;</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        way <span class="kw">INTO</span> check_way</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        osm_raw_data.planet_osm_polygon</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        name <span class="op">=</span> <span class="st">&#39;Λέσβος&#39;</span> <span class="kw">AND</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        place <span class="op">=</span> <span class="st">&#39;island&#39;</span>;</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">IF</span> <span class="kw">NOT</span> ST_Contains(check_way, <span class="kw">NEW</span>.location) <span class="cf">THEN</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        RAISE <span class="kw">EXCEPTION</span> <span class="st">&#39;Location (%) out of bounds&#39;</span>, ST_AsText(<span class="kw">NEW</span>.location)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="kw">USING</span> HINT <span class="op">=</span> <span class="st">&#39;Please check that the location is within Lesvos&#39;</span>;</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql;</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    vehicle_location_insert <span class="kw">check</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="kw">BEFORE</span> <span class="kw">INSERT</span> <span class="kw">ON</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    vehicle_location</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    fn_location_check()</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    vehicle_location_update_check</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="kw">BEFORE</span> <span class="kw">UPDATE</span> <span class="kw">ON</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    vehicle_location</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="cf">WHEN</span> (<span class="kw">OLD</span>.location <span class="kw">IS</span> <span class="kw">DISTINCT</span> <span class="kw">FROM</span> <span class="kw">NEW</span>.location)</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    fn_location_check()</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+</details>
+<h2 id="vehicle-location-archiver">5.6 Vehicle location archiver</h2>
+<p>We can move older entries in an archive schema. There we can still
+maintain them for analytical queries <strong><em>and</em></strong> make
+certain that the day to day operations do not degrade due to excessive
+relation size.</p>
+<p>We need to repeat this definition in a new schema, named archive.
+Then we need to launch a process that will run every X days and move
+data from the public schema to the archive schema.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">SCHEMA</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> <span class="kw">archive</span>;</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">archive</span>.vehicle_location (</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">LIKE</span> <span class="kw">public</span>.vehicle_location</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">archive</span>.vehicle_location</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Historical entries of vehicle_location table&#39;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+<p>Then we create the archive function and attach it to a delete
+trigger.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> fn_vehicle_location_archive ()</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">TRIGGER</span> <span class="kw">AS</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">archive</span>.vehicle_location</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">OLD</span>.<span class="op">*</span>);</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span> <span class="kw">OLD</span>;</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql;</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    vehicle_location_archive</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="kw">AFTER</span> <span class="kw">DELETE</span> <span class="kw">ON</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    vehicle_location</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    fn_vehicle_location_archive()</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+<p>Finally we create a cron job to archive location events every day
+five minutes past midnight.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> EXTENSION <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> pg_cron;</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    cron.schedule(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;5 0 * * *&#39;</span>,                                    <span class="co">-- Minute Hour Day Month Weekday</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        $body$</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>            <span class="kw">DELETE</span> <span class="kw">FROM</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                <span class="kw">public</span>.vehicle_location</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">WHERE</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                <span class="dt">timestamp</span> <span class="op">&lt;</span> NOW() <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 WEEK&#39;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        $body$</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    );</span></code></pre></div>
+</details>
+					<!-- Endi of Pandoc body -->
+					</div>
+			</div>
+
+			<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+				<p class="col-md-4 mb-0 text-body-secondary">
+					© 2025 Georgios Kokolatos
+				</p>
+				<p class="col-md-4 mb-0 text-body-secondary">
+					<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer">
+						CC BY-NC-SA 4.0
+					</a>
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="">
+				</p>
+				<ul class="nav col-md-4 justify-content-end">
+					<li class="nav-item">
+						<a href="#" class="nav-link px-2 text-body-secondary">Back to top</a>
+					</li>
+				</ul>
+			</footer>
+		</div>
+	</div>
+	<script src="./js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

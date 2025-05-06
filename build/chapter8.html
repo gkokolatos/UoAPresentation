@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+	<meta name="generator" content="pandoc" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta name="description" content="PostgreSQL Presentation for UoA">
+
+	<meta name="author" content="Georgios Kokolatos" />
+
+	<title>Application Interface</title>
+
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/custom.css" rel="stylesheet">
+
+	<meta name="theme-color" content="#712cf9">
+
+	<script>
+		let inited = false;
+		let baseFont = 0;
+		let baseMarginTop = 0;
+		let baseMarginBottom = 0;
+		let basePaddingTop = 0;
+		let basePaddingBottom = 0;
+
+		function setContentWidth(value) {
+			const container = document.getElementsByClassName("container");
+			for (let i = 0; i < container.length; i++) {
+				container[i].style.maxWidth = value;
+					console.log(container[i].style.maxWidth);
+				}
+				setReferences("pw", value);
+		}
+
+		function setReference(id, name, val) {
+			const ref = document.getElementById(id);
+			if (ref !== "" && ref !== undefined && ref !== null) {
+				let href = new URL(ref.href);
+				let params =  new URLSearchParams(href.search);
+
+				params.set(name, val);
+				href.search = params.toString();
+				ref.href = href.toString();
+			}
+		}
+
+		function setReferences(name, val) {
+			setReference("next_chapter", name, val);
+			setReference("prev_chapter", name, val);
+		}
+
+		function initParams() {
+			initFontSize();
+
+			const params = new URLSearchParams(window.location.search);
+			let pw = params.get("pw");
+			if (pw !== null) {
+				setContentWidth(pw);
+			}
+		}
+
+		function getRootVariable(name) {
+			return parseInt(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+		}
+
+		function setRootVariable(name, value) {
+			document.documentElement.style.setProperty(name, value);
+		}
+
+		function updateSizingVariables(multiplier) {
+			if (inited == false) {
+				baseFont = getRootVariable('--base-font-size');
+				baseMarginTop = getRootVariable('--base-margin-top');
+				baseMarginBottom = getRootVariable('--base-margin-bottom');
+				basePaddingTop = getRootVariable('--base-padding-top');
+				basePaddingBottom = getRootVariable('--base-padding-bottom');
+				inited = true;
+			}
+			setRootVariable('--base-font-size', (baseFont + multiplier) + 'px');
+			setRootVariable('--base-margin-top', (baseMarginTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-margin-bottom', (baseMarginBottom + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-top', (basePaddingTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-bottom', (basePaddingBottom + multiplier * 1.3) + 'px');
+		}
+
+		function initFontSize() {
+			const params = new URLSearchParams(window.location.search);
+			let fs = Number(params.get("fs")) || 0;
+			let fontSizeSlider = document.getElementById("fontSizeSlider");
+
+			fontSizeSlider.value = fs;
+			updateSizingVariables(fs);
+			setReferences("fs", fs);
+
+			fontSizeSlider.addEventListener("input", function () {
+				const val = parseInt(fontSizeSlider.value);
+
+				updateSizingVariables(val);
+				setReferences("fs", val);
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", (event) => {
+			initParams();
+		});
+	</script>
+</head>
+<body>
+	<div class="container shadow-lg py-0 px-3 mb-5 rounded">
+		<!-- Navbar -->
+		<header class="sticky-top">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="./chapter1.html">UoA PostgreSQL</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+							data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+							aria-expanded="false" aria-label="Toggle navigation"
+					>
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarNavDropdown">
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Contents
+								</a>
+								<ul class="dropdown-menu">
+																		<li>
+										<a class="dropdown-item" href="#fleet-management">8.1 Fleet
+management</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#">8.2 Fleet’s latest information</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#">8.3 Fleet’s concise information</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#">8.4 Fleet’s latest concise
+information</a>
+									</li>
+																	</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown position-static">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Adjust Font Size
+								</a>
+								<ul class="dropdown-menu w-100 mt-0">
+									<li class="p-1 m-1">
+										<input type="range" class="form-range" min="0" max="40" step="2" id="fontSizeSlider">
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Width
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('960px')">Narrow</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('1200px')">Large</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('80%')">Extra large</button>
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<!-- Prev and next links -->
+						<ul class="navbar-nav ms-auto">
+														<li class="nav-item">
+								<a class="nav-link" id="prev_chapter" href="chapter7.html" title="Previous Chapter: Schema
+testing">
+									&larr; Schema testing
+								</a>
+							</li>
+																					<li class="nav-item">
+								<a class="nav-link" id="next_chapter" href="chapter9.html" title="Next Chapter: Generating
+vehicle data">
+									Generating vehicle data &rarr;
+								</a>
+							</li>
+													</ul>
+
+					</div>
+				</div>
+			</nav>
+		</header>
+
+		<div id="content" class="content">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="body span12 content" role="main">
+					<!-- Pandoc body -->
+					<h1 id="application-interface">8 Application Interface</h1>
+<p>Important challenges that quite some teams face during the product
+life-cycle revolve around product updates, system upgrades, A/B testing,
+and canary deployments. Many times, it is important to be able to
+maintain more than one versions of the application level software
+available, which may target tables with different definitions.</p>
+<p>One good practice to help mitigate those problems, is to decouple the
+application level code, from the internals of the database schema. This
+can be accomplished by offering a set of views and functions for the
+application to interact with. This set of objects should remain stable
+within a version but the underline tables and functions may change.</p>
+<p>Finally, such a design practice, provides the added benefit of user
+control. For example, one can restrict access to the underline tables
+for users, but allow them to use views and functions in specific
+schemas.</p>
+<p>Let us create the first version of the interface.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">SCHEMA</span> v1_0_0;</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">SCHEMA</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    v1_0_0</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span> <span class="st">&#39;Version 1.0.0 of the application interface&#39;</span>;</span></code></pre></div>
+<h2 id="fleet-management">8.1 Fleet management</h2>
+<p><strong>As a application I want to</strong>:</p>
+<ul>
+<li>be able to add new vehicles</li>
+<li>be able to delete old vehicles that have not been involved in
+emergencies</li>
+<li>be able to assign states to a vehicle</li>
+<li>be able to assign location to a vehicle</li>
+</ul>
+<p><strong>So that</strong>:</p>
+<ul>
+<li>I can reflect the changes of the fleet size</li>
+<li>I can reflect the changes of the fleet availability</li>
+<li>I can know where the vehicles are, or have recently been</li>
+</ul>
+<p><strong>Because</strong>:</p>
+<ul>
+<li>I need to be able to manage it</li>
+</ul>
+<details>
+<summary>
+Addition
+</summary>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> search_path <span class="kw">TO</span> v1_0_0, <span class="kw">public</span>;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> insert_vehicle(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    in_fleet_id text</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">public</span>.vehicles.<span class="kw">id</span><span class="dt">%TYPE</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicles (fleet_id)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span> (</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        in_fleet_id</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">id</span>;</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>LANGUAGE sql;</span></code></pre></div>
+</details>
+<details>
+<summary>
+Deletion
+</summary>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> search_path <span class="kw">TO</span> v1_0_0, <span class="kw">public</span>;</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> delete_vehicle(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    in_fleet_id text</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">public</span>.vehicles.<span class="kw">id</span><span class="dt">%TYPE</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>   <span class="kw">DELETE</span> <span class="kw">FROM</span> </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicles </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        in_fleet_id <span class="op">=</span> in_fleet_id</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">id</span>;</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>LANGUAGE sql;</span></code></pre></div>
+</details>
+<details>
+<summary>
+State assignment
+</summary>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">--</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- This will NOT return null on non existing fleet_id</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- because it is a single row insert</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">--</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> v1_0_0.assign_vehicle_state(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    in_fleet_id text,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    in_state <span class="kw">public</span>.vehicle_state.state<span class="dt">%TYPE</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">public</span>.vehicle_state.state_id<span class="dt">%TYPE</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_state (vehicle_id, state)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span> (</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">SELECT</span> <span class="kw">id</span> <span class="kw">FROM</span> <span class="kw">public</span>.vehicles <span class="kw">WHERE</span> fleet_id <span class="op">=</span> in_fleet_id),</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        in_state</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        state_id;</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>LANGUAGE sql;</span></code></pre></div>
+</details>
+<details>
+<summary>
+Location assignment
+</summary>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">--</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- This will return null on non existing fleet_id</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- because it is a bulk insert</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">--</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> v1_0_0.assign_vehicle_location(</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    in_fleet_id text,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    in_location geometry(Point,<span class="dv">4326</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">public</span>.vehicle_location.location_id<span class="dt">%TYPE</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_location (vehicle_id, location)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">id</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        ST_Transform(in_location,<span class="dv">2100</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        vehicles</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        fleet_id <span class="op">=</span> in_fleet_id</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        location_id;</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>LANGUAGE sql;</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> v1_0_0.assign_vehicle_location(</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    in_fleet_id text,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    in_location geometry(Point,<span class="dv">2100</span>)</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">public</span>.vehicle_location.location_id<span class="dt">%TYPE</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_location (vehicle_id, location)</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        <span class="kw">id</span>,</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        in_location</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        vehicles</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        fleet_id <span class="op">=</span> in_fleet_id</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        location_id;</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>LANGUAGE sql;</span></code></pre></div>
+</details>
+<h2 id="fleets-latest-information">8.2 Fleet’s latest information</h2>
+<p><strong>As a application I want to</strong>:</p>
+<ul>
+<li>be able to get the all the vehicles’ latest states</li>
+<li>be able to get the all the vehicles’ latest location</li>
+</ul>
+<p><strong>So that</strong>:</p>
+<ul>
+<li>I can easily access their latest details</li>
+</ul>
+<p><strong>Because</strong>:</p>
+<ul>
+<li>I need to be able to oversee it</li>
+</ul>
+<details>
+<summary>
+Latest state
+</summary>
+<p>Distinct on is PostgreSQL extension of the SQL standard. It will get
+interpreted using the rules defined in the <em>ORDER BY</em> clause. If
+<em>ORDER BY</em> is not used, then the result <em>will be
+unpredictable</em>.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">VIEW</span> vehicle_latest_state <span class="kw">AS</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">DISTINCT</span> <span class="kw">ON</span> (vs.vehicle_id)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        v.fleet_id,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        vs.<span class="dt">timestamp</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        vs.state</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_state vs <span class="kw">JOIN</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicles v <span class="kw">ON</span> (</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            vs.vehicle_id <span class="op">=</span> v.<span class="kw">id</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="kw">DESC</span>;</span></code></pre></div>
+</details>
+<details>
+<summary>
+Latest location
+</summary>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">VIEW</span> v1_0_0.vehicle_latest_location <span class="kw">AS</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">DISTINCT</span> <span class="kw">ON</span> (vl.vehicle_id)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        v.fleet_id,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        vl.<span class="dt">timestamp</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        vl.location</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_location vl <span class="kw">JOIN</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicles v <span class="kw">ON</span> (</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            vl.vehicle_id <span class="op">=</span> v.<span class="kw">id</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="kw">DESC</span>;</span></code></pre></div>
+</details>
+<h2 id="fleets-concise-information">8.3 Fleet’s concise information</h2>
+<p><strong>As a application I want to</strong>:</p>
+<ul>
+<li>be able to get the all the vehicles’ holistic information</li>
+</ul>
+<p><strong>So that</strong>:</p>
+<ul>
+<li>I can get a present and past overview of the fleet</li>
+</ul>
+<p><strong>Because</strong>:</p>
+<ul>
+<li>I need to generate strategies</li>
+</ul>
+<p>The above requirement, dictates that we join all the vehicle
+relations so that we can know in which locations a vehicle has been
+<strong><em>and</em></strong> which state it had when there.
+Practically, we need to find the timestamps that a vehicle changed state
+and based on that, retrieve it’s location information.</p>
+<p>PostgreSQL implements <em>Common Table Expressions</em> or CTEs, as a
+means to break down large queries into separate auxiliary statements.
+They really improve readability, extend usability, for example in their
+<em>RECURSIVE</em> form, but they do come with some caveats.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">VIEW</span> vehicle_info <span class="kw">AS</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WITH</span> state_info <span class="kw">AS</span> (</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">SELECT</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>            vehicle_id,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>            state,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">timestamp</span> <span class="kw">AS</span> start_timestamp,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">COALESCE</span>(</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                <span class="fu">LEAD</span>(<span class="dt">timestamp</span>, <span class="dv">1</span>) <span class="kw">OVER</span> (<span class="kw">PARTITION</span> <span class="kw">BY</span> vehicle_id <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">ASC</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;infinity&#39;</span>:<span class="ch">:timestamptz</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>            ) <span class="kw">AS</span> end_timestamp</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FROM</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>            <span class="kw">public</span>.vehicle_state</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>            vehicle_id <span class="kw">ASC</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">timestamp</span> <span class="kw">ASC</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        vehicles.fleet_id,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        state_info.start_timestamp <span class="kw">AS</span> <span class="ot">&quot;state timestamp&quot;</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        state_info.state,</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        vehicle_location.<span class="dt">timestamp</span> <span class="kw">AS</span> <span class="ot">&quot;location timestamp&quot;</span>,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        location,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        ST_AsText(location) <span class="kw">AS</span> <span class="ot">&quot;human readable location&quot;</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_location <span class="kw">AS</span> vehicle_location</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RIGHT</span> <span class="kw">JOIN</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        state_info <span class="kw">ON</span> (</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>            vehicle_location.vehicle_id <span class="op">=</span> state_info.vehicle_id <span class="kw">AND</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>            vehicle_location.<span class="dt">timestamp</span> <span class="op">&gt;=</span> state_info.start_timestamp <span class="kw">AND</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>            vehicle_location.<span class="dt">timestamp</span> <span class="op">&lt;</span> state_info.end_timestamp</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RIGHT</span> <span class="kw">JOIN</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicles <span class="kw">AS</span> vehicles <span class="kw">ON</span> (</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>            vehicles.<span class="kw">id</span> <span class="op">=</span> state_info.vehicle_id</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>        );</span></code></pre></div>
+</details>
+<h2 id="fleets-latest-concise-information">8.4 Fleet’s latest concise
+information</h2>
+<p>Combining the above strategies, we can trivially retrieve the latest
+state <strong><em>and</em></strong> location for each vehicle in the
+fleet.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">VIEW</span> vehicle_latest_info <span class="kw">AS</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">DISTINCT</span> <span class="kw">ON</span> (fleet_id)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>     <span class="kw">FROM</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        v1_0_0.vehicle_info</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        fleet_id,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="ot">&quot;state timestamp&quot;</span> <span class="kw">DESC</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="ot">&quot;location timestamp&quot;</span> <span class="kw">DESC</span></span></code></pre></div>
+</details>
+					<!-- Endi of Pandoc body -->
+					</div>
+			</div>
+
+			<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+				<p class="col-md-4 mb-0 text-body-secondary">
+					© 2025 Georgios Kokolatos
+				</p>
+				<p class="col-md-4 mb-0 text-body-secondary">
+					<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer">
+						CC BY-NC-SA 4.0
+					</a>
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="">
+				</p>
+				<ul class="nav col-md-4 justify-content-end">
+					<li class="nav-item">
+						<a href="#" class="nav-link px-2 text-body-secondary">Back to top</a>
+					</li>
+				</ul>
+			</footer>
+		</div>
+	</div>
+	<script src="./js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

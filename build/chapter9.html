@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+	<meta name="generator" content="pandoc" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta name="description" content="PostgreSQL Presentation for UoA">
+
+	<meta name="author" content="Georgios Kokolatos" />
+
+	<title>Generating vehicle data</title>
+
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/custom.css" rel="stylesheet">
+
+	<meta name="theme-color" content="#712cf9">
+
+	<script>
+		let inited = false;
+		let baseFont = 0;
+		let baseMarginTop = 0;
+		let baseMarginBottom = 0;
+		let basePaddingTop = 0;
+		let basePaddingBottom = 0;
+
+		function setContentWidth(value) {
+			const container = document.getElementsByClassName("container");
+			for (let i = 0; i < container.length; i++) {
+				container[i].style.maxWidth = value;
+					console.log(container[i].style.maxWidth);
+				}
+				setReferences("pw", value);
+		}
+
+		function setReference(id, name, val) {
+			const ref = document.getElementById(id);
+			if (ref !== "" && ref !== undefined && ref !== null) {
+				let href = new URL(ref.href);
+				let params =  new URLSearchParams(href.search);
+
+				params.set(name, val);
+				href.search = params.toString();
+				ref.href = href.toString();
+			}
+		}
+
+		function setReferences(name, val) {
+			setReference("next_chapter", name, val);
+			setReference("prev_chapter", name, val);
+		}
+
+		function initParams() {
+			initFontSize();
+
+			const params = new URLSearchParams(window.location.search);
+			let pw = params.get("pw");
+			if (pw !== null) {
+				setContentWidth(pw);
+			}
+		}
+
+		function getRootVariable(name) {
+			return parseInt(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+		}
+
+		function setRootVariable(name, value) {
+			document.documentElement.style.setProperty(name, value);
+		}
+
+		function updateSizingVariables(multiplier) {
+			if (inited == false) {
+				baseFont = getRootVariable('--base-font-size');
+				baseMarginTop = getRootVariable('--base-margin-top');
+				baseMarginBottom = getRootVariable('--base-margin-bottom');
+				basePaddingTop = getRootVariable('--base-padding-top');
+				basePaddingBottom = getRootVariable('--base-padding-bottom');
+				inited = true;
+			}
+			setRootVariable('--base-font-size', (baseFont + multiplier) + 'px');
+			setRootVariable('--base-margin-top', (baseMarginTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-margin-bottom', (baseMarginBottom + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-top', (basePaddingTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-bottom', (basePaddingBottom + multiplier * 1.3) + 'px');
+		}
+
+		function initFontSize() {
+			const params = new URLSearchParams(window.location.search);
+			let fs = Number(params.get("fs")) || 0;
+			let fontSizeSlider = document.getElementById("fontSizeSlider");
+
+			fontSizeSlider.value = fs;
+			updateSizingVariables(fs);
+			setReferences("fs", fs);
+
+			fontSizeSlider.addEventListener("input", function () {
+				const val = parseInt(fontSizeSlider.value);
+
+				updateSizingVariables(val);
+				setReferences("fs", val);
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", (event) => {
+			initParams();
+		});
+	</script>
+</head>
+<body>
+	<div class="container shadow-lg py-0 px-3 mb-5 rounded">
+		<!-- Navbar -->
+		<header class="sticky-top">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="./chapter1.html">UoA PostgreSQL</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+							data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+							aria-expanded="false" aria-label="Toggle navigation"
+					>
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarNavDropdown">
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Contents
+								</a>
+								<ul class="dropdown-menu">
+																		<li>
+										<a class="dropdown-item" href="#generate-vehicles">9.1 Generate
+vehicles</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#generate-states">9.2 Generate states</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#the-first-patrol">9.3 The first
+patrol</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#the-patrol-went-places">9.4 The patrol
+went places</a>
+									</li>
+																	</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown position-static">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Adjust Font Size
+								</a>
+								<ul class="dropdown-menu w-100 mt-0">
+									<li class="p-1 m-1">
+										<input type="range" class="form-range" min="0" max="40" step="2" id="fontSizeSlider">
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Width
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('960px')">Narrow</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('1200px')">Large</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('80%')">Extra large</button>
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<!-- Prev and next links -->
+						<ul class="navbar-nav ms-auto">
+														<li class="nav-item">
+								<a class="nav-link" id="prev_chapter" href="chapter8.html" title="Previous Chapter: Application
+Interface">
+									&larr; Application Interface
+								</a>
+							</li>
+																					<li class="nav-item">
+								<a class="nav-link" id="next_chapter" href="chapter10.html" title="Next Chapter: Routing">
+									Routing &rarr;
+								</a>
+							</li>
+													</ul>
+
+					</div>
+				</div>
+			</nav>
+		</header>
+
+		<div id="content" class="content">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="body span12 content" role="main">
+					<!-- Pandoc body -->
+					<h1 id="generating-vehicle-data">9 Generating vehicle data</h1>
+<p>It is fundamental to have a reliable and consistent dataset to be
+able to check your schema, functions, views, etc at any time. Granted,
+many times one would seek to acquire a set of production data,
+anonymized, in order to have a ‘realistic’ dataset. However, often
+synthetic data are necessary. Either because of the nature of the
+project where data is sensitive and should not leave the server, or
+because we need to generate data before we release a new feature, or
+simply because we need a consistently re-creatable dataset.</p>
+<h2 id="generate-vehicles">9.1 Generate vehicles</h2>
+<p>This is the most straight forward scenario. Generate 100 random
+fleet_ids and insert them to an empty schema.</p>
+<p>But if we do just that, then we will have generated initial states at
+the time of insertion. Most probably will need to change the vehicle’s
+state a couple of times. So the scenario then becomes: Generate 100
+random fleet_id and <strong><em>update</em></strong> their initial
+state’s timestamp to approximately 10 days ago.</p>
+<p>This is an excellent point to mention that the following CTE approach
+will not work and show why.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPLAIN</span> (COSTS <span class="kw">OFF</span>) <span class="kw">WITH</span> <span class="kw">data</span> <span class="kw">AS</span> (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        v1_0_0.insert_vehicle(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">UPPER</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">SUBSTR</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">REGEXP_REPLACE</span>(md5(i:<span class="ch">:text</span>), <span class="st">&#39;[[:digit:]]&#39;</span>, <span class="st">&#39;&#39;</span>, <span class="st">&#39;g&#39;</span>), <span class="dv">1</span>, <span class="dv">3</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            ) <span class="op">||</span> <span class="st">&#39;-&#39;</span> <span class="op">||</span> <span class="fu">LPAD</span>(i:<span class="ch">:text</span>, <span class="dv">3</span>, <span class="st">&#39;0&#39;</span>)) <span class="kw">AS</span> <span class="kw">id</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">CURRENT_TIMESTAMP</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;10 days&#39;</span> <span class="op">+</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            ((<span class="fu">FLOOR</span>(<span class="kw">random</span>() <span class="op">*</span> <span class="dv">10</span>) <span class="op">*</span>  <span class="dv">60</span> <span class="op">*</span> <span class="dv">60</span>) <span class="op">||</span> <span class="st">&#39; seconds&#39;</span>):<span class="ch">:INTERVAL</span> <span class="kw">AS</span> <span class="dt">timestamp</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        generate_series(<span class="dv">1</span>, <span class="dv">100</span>) i</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span>.vehicle_state</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> <span class="op">=</span> <span class="kw">data</span>.<span class="dt">timestamp</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">data</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    vehicle_id <span class="op">=</span> <span class="kw">data</span>.<span class="kw">id</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                       <span class="kw">QUERY</span> <span class="kw">PLAN</span>                        </span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">---------------------------------------------------------</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a> <span class="kw">Update</span> <span class="kw">on</span> vehicle_state</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>   CTE <span class="kw">data</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>     <span class="op">-&gt;</span>  <span class="kw">Function</span> <span class="kw">Scan</span> <span class="kw">on</span> generate_series i</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>   <span class="op">-&gt;</span>  <span class="kw">Hash</span> <span class="kw">Join</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>         <span class="kw">Hash</span> Cond: (vehicle_state.vehicle_id <span class="op">=</span> <span class="kw">data</span>.<span class="kw">id</span>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>         <span class="op">-&gt;</span>  Seq <span class="kw">Scan</span> <span class="kw">on</span> vehicle_state</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>         <span class="op">-&gt;</span>  <span class="kw">Hash</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>               <span class="op">-&gt;</span>  CTE <span class="kw">Scan</span> <span class="kw">on</span> <span class="kw">data</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>(<span class="dv">8</span> <span class="kw">rows</span>)</span></code></pre></div>
+<p>However two distinct queries within the same transaction will
+work.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span>;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    v1_0_0.insert_vehicle(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">UPPER</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">SUBSTR</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">REGEXP_REPLACE</span>(md5(i:<span class="ch">:text</span>), <span class="st">&#39;[[:digit:]]&#39;</span>, <span class="st">&#39;&#39;</span>, <span class="st">&#39;g&#39;</span>), <span class="dv">1</span>, <span class="dv">3</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        ) <span class="op">||</span> <span class="st">&#39;-&#39;</span> <span class="op">||</span> <span class="fu">LPAD</span>(i:<span class="ch">:text</span>, <span class="dv">3</span>, <span class="st">&#39;0&#39;</span>)) <span class="kw">AS</span> <span class="kw">id</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    generate_series(<span class="dv">1</span>, <span class="dv">100</span>) i</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span>.vehicle_state</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> <span class="op">=</span> <span class="dt">timestamp</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;10 days&#39;</span> <span class="op">+</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">random</span>() <span class="op">*</span> (<span class="dt">INTERVAL</span> <span class="st">&#39;1 days&#39;</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span>) <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMIT</span>;</span></code></pre></div>
+<h2 id="generate-states">9.2 Generate states</h2>
+<p>The next step is to generate states. Let us assume that about 30% of
+the vehicle upon delivery, needed to be sent to the workshop for
+adjustments. The rest was unmanned, awaiting for personnel to patrol.
+The delivery process should not take more than 10 hours.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> dsample <span class="kw">AS</span> (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="op">+</span> <span class="kw">random</span>() <span class="op">*</span> (<span class="dt">INTERVAL</span> <span class="st">&#39;10 hours&#39;</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span>) <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;decommissioned&#39;</span>:<span class="ch">:public</span>.vehicle_state_enum</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_state TABLESAMPLE BERNOULLI (<span class="dv">30</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>), <span class="kw">sample</span> <span class="kw">AS</span> (</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        vs.vehicle_id,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="op">+</span> <span class="kw">random</span>() <span class="op">*</span> (<span class="dt">INTERVAL</span> <span class="st">&#39;10 hours&#39;</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span>) <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;off duty&#39;</span>:<span class="ch">:public</span>.vehicle_state_enum</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_state vs</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">LEFT</span> <span class="kw">JOIN</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        dsample d <span class="kw">ON</span> vs.vehicle_id <span class="op">=</span> d.vehicle_id</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        d.vehicle_id <span class="kw">IS</span> <span class="kw">NULL</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> dsample</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span>.vehicle_state (vehicle_id, <span class="dt">timestamp</span>, state)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">sample</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+</details>
+<h2 id="the-first-patrol">9.3 The first patrol</h2>
+<p>Next step is to send some vehicles out for patrol. Ten vehicles which
+are currently unmanned, i.e. have state <em>‘off duty’</em>, acquire
+personnel within an hour of their delivery and then went for patrol for
+anywhere between four and height hours.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> <span class="kw">sample</span> <span class="kw">AS</span> (</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        v.<span class="kw">id</span> <span class="kw">as</span> vehicle_id,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">random</span>() <span class="op">*</span> (<span class="dt">INTERVAL</span> <span class="st">&#39;1 hour&#39;</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span>) <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="st">&#39;1 second&#39;</span> <span class="kw">AS</span> patrol_start,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">random</span>() <span class="op">*</span> (<span class="dt">INTERVAL</span> <span class="st">&#39;8 hours&#39;</span> <span class="op">-</span> <span class="dt">INTERVAL</span> <span class="st">&#39;4 hour&#39;</span>) <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="st">&#39;4 hour&#39;</span> <span class="kw">AS</span> patrol_duration</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        v1_0_0.vehicle_latest_state vl <span class="kw">JOIN</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicles v <span class="kw">ON</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            v.fleet_id <span class="op">=</span> vl.fleet_id</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> <span class="st">&#39;off duty&#39;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">random</span>()</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">LIMIT</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="dv">10</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>), on_duty <span class="kw">AS</span> (</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_state (vehicle_id, <span class="dt">timestamp</span>, state)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="op">+</span> patrol_start,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;on duty&#39;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">sample</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>), off_duty <span class="kw">AS</span> (</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        <span class="kw">public</span>.vehicle_state (vehicle_id, <span class="dt">timestamp</span>, state)</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="op">+</span> patrol_start <span class="op">+</span> patrol_duration,</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;off duty&#39;</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        <span class="kw">sample</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> on_duty</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> off_duty;</span></code></pre></div>
+</details>
+<h2 id="the-patrol-went-places">9.4 The patrol went places</h2>
+<p>Finally let us generate locations for the vehicles that went on
+patrol. This will get complex. We want to simulate the vehicles driving
+along a road, occasionally pausing, taking some turns to other roads,
+until their patrol ends or they reach a dead end. During their patrol, a
+tracker sends the vehicle’s location every minute.</p>
+<p>This query is possible to be implemented with everything that has
+been covered so far. Yet it becomes much more elegant by using
+<strong><em>recursive CTEs</em></strong> and
+<strong><em>lateral</em></strong>, two severely underutilized PostgreSQL
+features.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> RECURSIVE patrol_vehicles <span class="kw">AS</span> (</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Step 1: Select the vehicles that went on patrol and remember when they</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- started and how many minutes it lasted</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="kw">AS</span> ticker_start,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">FLOOR</span>(<span class="fu">EXTRACT</span>(epoch <span class="kw">from</span> next_timestamp <span class="op">-</span> <span class="dt">timestamp</span>) <span class="op">/</span> <span class="dv">60</span>) <span class="kw">AS</span> tick_count,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ROW_NUMBER</span>() <span class="kw">OVER</span> () <span class="kw">AS</span> rn                             <span class="co">-- Give an attribute to be able to join with the roads</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> (</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">SELECT</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            vehicle_id,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="dt">timestamp</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            state,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            <span class="fu">LEAD</span>(<span class="dt">timestamp</span>, <span class="dv">1</span>) <span class="kw">OVER</span> state_window <span class="kw">AS</span> next_timestamp,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            <span class="fu">LEAD</span>(state, <span class="dv">1</span>)     <span class="kw">OVER</span> state_window <span class="kw">AS</span> next_state</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FROM</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            vehicle_state</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        WINDOW</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>            state_window <span class="kw">AS</span> (<span class="kw">PARTITION</span> <span class="kw">BY</span> vehicle_id <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">ASC</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    ) foo</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> <span class="st">&#39;on duty&#39;</span> <span class="kw">AND</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        next_state <span class="op">=</span> <span class="st">&#39;off duty&#39;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>), road_selection <span class="kw">AS</span> (</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Step 2: Select an equal amount of random large-ish roads </span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>,</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ROW_NUMBER</span>() <span class="kw">OVER</span> () <span class="kw">AS</span> rn</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> (</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">SELECT</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>            osm_id,</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            way <span class="kw">AS</span> road,                                        <span class="co">-- The geometry </span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>            ST_LineInterpolatePoint(way, <span class="fl">0.0</span>) <span class="kw">AS</span> start_point,   <span class="co">-- The starting point of the road (0% along the road),</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>            ST_LineInterpolatePoint(way, <span class="fl">1.0</span>) <span class="kw">AS</span> end_point      <span class="co">-- The final point of the road (100% along the road),</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FROM</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>            osm_raw_data.planet_osm_roads</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        <span class="kw">WHERE</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            highway <span class="kw">IN</span> (<span class="st">&#39;primary&#39;</span>, <span class="st">&#39;secondary&#39;</span>, <span class="st">&#39;tertiary&#39;</span>, <span class="st">&#39;residential&#39;</span>) <span class="kw">AND</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>            ST_Length(way) <span class="op">&gt;</span> <span class="fl">1000.0</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>            <span class="kw">random</span>()</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        <span class="kw">LIMIT</span> (<span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> patrol_vehicles)</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>), vehicle_roads <span class="kw">AS</span> (</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Step 3: Assign a vehicle to a road</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>        road_selection <span class="kw">JOIN</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>        patrol_vehicles <span class="kw">USING</span> (rn)</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>), tracker_ticks <span class="kw">AS</span> (</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Step 4: Recursively calculate the vehicle&#39;s travel along the road</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- assuming that the vehicle moves about 100 meters between ticks, unless</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- close to a junction</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>        ticker_start,</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>        tick_count,</span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>        <span class="dv">0</span> <span class="kw">AS</span> nticks,                                           <span class="co">-- Starting at step 0</span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.0</span>:<span class="ch">:double</span> <span class="dt">precision</span> <span class="kw">AS</span> fraction,                     <span class="co">-- Starting at 0% progress along the road</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>        road,</span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>        start_point,</span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>        end_point</span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>        vehicle_roads</span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>        tt.vehicle_id,</span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>        ticker_start,</span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>        tick_count,</span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>        tt.nticks <span class="op">+</span> <span class="dv">1</span>,                                         <span class="co">-- Increment the sequence step</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>        <span class="cf">CASE</span></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> tt.fraction <span class="op">&gt;=</span> <span class="fl">0.95</span> <span class="cf">THEN</span> <span class="fl">0.0</span>                  <span class="co">-- If the vehicle is near the end, reset progress to 0</span></span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> tt.fraction <span class="op">+</span> (<span class="fl">100.0</span> <span class="op">/</span> ST_Length(tt.road)) <span class="op">&gt;=</span> <span class="fl">0.95</span> <span class="cf">THEN</span> <span class="fl">0.95</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>            <span class="cf">ELSE</span> tt.fraction <span class="op">+</span> (<span class="fl">100.0</span> <span class="op">/</span> ST_Length(tt.road))    <span class="co">-- Otherwise, increment progress along the road</span></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>        <span class="cf">END</span>,</span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>        <span class="cf">CASE</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> tt.fraction <span class="op">&gt;=</span> <span class="fl">0.95</span> <span class="cf">THEN</span> nr.road              <span class="co">-- Switch road when near the end</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>            <span class="cf">ELSE</span> tt.road</span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>        <span class="cf">END</span>,</span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>        <span class="cf">CASE</span></span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> tt.fraction <span class="op">&gt;=</span> <span class="fl">0.95</span> <span class="cf">THEN</span> ST_LineInterpolatePoint(nr.road, <span class="fl">0.0</span>)  <span class="co">-- Set new start point for the next road</span></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>            <span class="cf">ELSE</span> tt.start_point</span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>        <span class="cf">END</span>,</span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>        <span class="cf">CASE</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> tt.fraction <span class="op">&gt;=</span> <span class="fl">0.95</span> <span class="cf">THEN</span> ST_LineInterpolatePoint(nr.road, <span class="fl">1.0</span>)  <span class="co">-- Set new end point for the next road</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>            <span class="cf">ELSE</span> tt.end_point</span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>        <span class="cf">END</span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>        tracker_ticks tt</span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>    <span class="kw">LEFT</span> <span class="kw">JOIN</span> LATERAL (</span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- Select a road close to the end as the next road to move along to</span></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>        <span class="kw">SELECT</span></span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>            r.way <span class="kw">AS</span> road</span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FROM</span></span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>            osm_raw_data.planet_osm_roads r</span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>        <span class="kw">WHERE</span></span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>            ST_DWithin(ST_LineInterpolatePoint(r.way, <span class="fl">0.0</span>), tt.end_point, <span class="fl">0.0005</span>) <span class="kw">AND</span></span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>            highway <span class="kw">IN</span> (<span class="st">&#39;primary&#39;</span>, <span class="st">&#39;secondary&#39;</span>, <span class="st">&#39;tertiary&#39;</span>, <span class="st">&#39;residential&#39;</span>)</span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>        <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>            <span class="kw">random</span>()                                           <span class="co">-- Do not always turn on the same heuristic</span></span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>        <span class="kw">LIMIT</span></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>            <span class="dv">1</span></span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>    ) nr <span class="kw">ON</span></span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>        tt.fraction <span class="op">&gt;=</span> <span class="fl">0.95</span>                                    <span class="co">-- Switch road if near the end of the current road</span></span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>        tt.nticks <span class="op">&lt;</span>  tt.tick_count                             <span class="co">-- Stop tracking at the end of patrol</span></span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>), tracker_points <span class="kw">AS</span> (</span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Step 5: Construct the location + timestamp information</span></span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>        vehicle_id,</span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>        ticker_start <span class="op">+</span> (nticks <span class="op">||</span> <span class="st">&#39; minutes&#39;</span>):<span class="ch">:INTERVAL</span> <span class="kw">AS</span> <span class="dt">timestamp</span>,</span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>        <span class="cf">CASE</span></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> <span class="kw">random</span>() <span class="op">&lt;</span> <span class="fl">0.2</span> <span class="cf">THEN</span></span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>                <span class="co">-- 20% chance for some random pause (using the previous location)</span></span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>                <span class="fu">LAG</span>(ST_LineInterpolatePoint(road, fraction)) <span class="kw">OVER</span> (<span class="kw">PARTITION</span> <span class="kw">BY</span> vehicle_id <span class="kw">ORDER</span> <span class="kw">BY</span> nticks)</span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>            <span class="cf">ELSE</span></span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>                <span class="co">-- Otherwise, calculate current position along the road</span></span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>                <span class="co">-- It will appear as the vehicle was lunging forward at times</span></span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>                ST_LineInterpolatePoint(road, fraction)</span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>        <span class="cf">END</span> <span class="kw">AS</span> location</span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>        tracker_ticks</span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a><span class="co">-- Step 6: Populate the vehicle_location table</span></span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>    vehicle_location (vehicle_id, <span class="dt">timestamp</span>, location)</span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>    vehicle_id,</span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span>,</span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>    location</span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span></span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>    tracker_points</span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span></span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>    location <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<p>And the result is:</p>
+<p><img src="./img/vehicle_location_generation.png" alt="Vehicle Location Generation" style="width:100%;"/></p>
+<p>Or a detail in an urban environment:
+<img src="./img/location_generation_detail.png" alt="Vehicle Location Generation" style="width:100%;"/></p>
+</details>
+					<!-- Endi of Pandoc body -->
+					</div>
+			</div>
+
+			<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+				<p class="col-md-4 mb-0 text-body-secondary">
+					© 2025 Georgios Kokolatos
+				</p>
+				<p class="col-md-4 mb-0 text-body-secondary">
+					<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer">
+						CC BY-NC-SA 4.0
+					</a>
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="">
+				</p>
+				<ul class="nav col-md-4 justify-content-end">
+					<li class="nav-item">
+						<a href="#" class="nav-link px-2 text-body-secondary">Back to top</a>
+					</li>
+				</ul>
+			</footer>
+		</div>
+	</div>
+	<script src="./js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+	<meta name="generator" content="pandoc" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta name="description" content="PostgreSQL Presentation for UoA">
+
+	<meta name="author" content="Georgios Kokolatos" />
+
+	<title>Emergencies</title>
+
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/custom.css" rel="stylesheet">
+
+	<meta name="theme-color" content="#712cf9">
+
+	<script>
+		let inited = false;
+		let baseFont = 0;
+		let baseMarginTop = 0;
+		let baseMarginBottom = 0;
+		let basePaddingTop = 0;
+		let basePaddingBottom = 0;
+
+		function setContentWidth(value) {
+			const container = document.getElementsByClassName("container");
+			for (let i = 0; i < container.length; i++) {
+				container[i].style.maxWidth = value;
+					console.log(container[i].style.maxWidth);
+				}
+				setReferences("pw", value);
+		}
+
+		function setReference(id, name, val) {
+			const ref = document.getElementById(id);
+			if (ref !== "" && ref !== undefined && ref !== null) {
+				let href = new URL(ref.href);
+				let params =  new URLSearchParams(href.search);
+
+				params.set(name, val);
+				href.search = params.toString();
+				ref.href = href.toString();
+			}
+		}
+
+		function setReferences(name, val) {
+			setReference("next_chapter", name, val);
+			setReference("prev_chapter", name, val);
+		}
+
+		function initParams() {
+			initFontSize();
+
+			const params = new URLSearchParams(window.location.search);
+			let pw = params.get("pw");
+			if (pw !== null) {
+				setContentWidth(pw);
+			}
+		}
+
+		function getRootVariable(name) {
+			return parseInt(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
+		}
+
+		function setRootVariable(name, value) {
+			document.documentElement.style.setProperty(name, value);
+		}
+
+		function updateSizingVariables(multiplier) {
+			if (inited == false) {
+				baseFont = getRootVariable('--base-font-size');
+				baseMarginTop = getRootVariable('--base-margin-top');
+				baseMarginBottom = getRootVariable('--base-margin-bottom');
+				basePaddingTop = getRootVariable('--base-padding-top');
+				basePaddingBottom = getRootVariable('--base-padding-bottom');
+				inited = true;
+			}
+			setRootVariable('--base-font-size', (baseFont + multiplier) + 'px');
+			setRootVariable('--base-margin-top', (baseMarginTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-margin-bottom', (baseMarginBottom + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-top', (basePaddingTop + multiplier * 1.3) + 'px');
+			setRootVariable('--base-padding-bottom', (basePaddingBottom + multiplier * 1.3) + 'px');
+		}
+
+		function initFontSize() {
+			const params = new URLSearchParams(window.location.search);
+			let fs = Number(params.get("fs")) || 0;
+			let fontSizeSlider = document.getElementById("fontSizeSlider");
+
+			fontSizeSlider.value = fs;
+			updateSizingVariables(fs);
+			setReferences("fs", fs);
+
+			fontSizeSlider.addEventListener("input", function () {
+				const val = parseInt(fontSizeSlider.value);
+
+				updateSizingVariables(val);
+				setReferences("fs", val);
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", (event) => {
+			initParams();
+		});
+	</script>
+</head>
+<body>
+	<div class="container shadow-lg py-0 px-3 mb-5 rounded">
+		<!-- Navbar -->
+		<header class="sticky-top">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="./chapter1.html">UoA PostgreSQL</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+							data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+							aria-expanded="false" aria-label="Toggle navigation"
+					>
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarNavDropdown">
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Contents
+								</a>
+								<ul class="dropdown-menu">
+																		<li>
+										<a class="dropdown-item" href="#emergencies">6. Emergencies</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#the-base-relation">6.1 The base
+relation</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#emergency-state">6.2 Emergency state</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#assign-vehicle-to-emergency">6.3 Assign
+vehicle to emergency</a>
+									</li>
+																		<li>
+										<a class="dropdown-item" href="#detach-vehicles-on-emergency-conclussion">6.4
+Detach vehicles on emergency conclussion</a>
+									</li>
+																	</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown position-static">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Adjust Font Size
+								</a>
+								<ul class="dropdown-menu w-100 mt-0">
+									<li class="p-1 m-1">
+										<input type="range" class="form-range" min="0" max="40" step="2" id="fontSizeSlider">
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<ul class="navbar-nav">
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle" href="#" role="button"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									Page Width
+								</a>
+								<ul class="dropdown-menu">
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('960px')">Narrow</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('1200px')">Large</button>
+									</li>
+									<li>
+										<button class="dropdown-item" onclick="setContentWidth('80%')">Extra large</button>
+									</li>
+								</ul>
+							</li>
+						</ul>
+
+						<!-- Prev and next links -->
+						<ul class="navbar-nav ms-auto">
+														<li class="nav-item">
+								<a class="nav-link" id="prev_chapter" href="chapter5.html" title="Previous Chapter: Vehicle
+log">
+									&larr; Vehicle log
+								</a>
+							</li>
+																					<li class="nav-item">
+								<a class="nav-link" id="next_chapter" href="chapter7.html" title="Next Chapter: Schema
+Testing">
+									Schema Testing &rarr;
+								</a>
+							</li>
+													</ul>
+
+					</div>
+				</div>
+			</nav>
+		</header>
+
+		<div id="content" class="content">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="body span12 content" role="main">
+					<!-- Pandoc body -->
+					<h1 id="emergencies">6. Emergencies</h1>
+<p><strong>As a user I want to</strong>:</p>
+<ul>
+<li>be able to declare an emergency</li>
+<li>assign one or more available vehicles to it</li>
+<li>detach one or more assigned vehicles from it</li>
+</ul>
+<p><strong>So that</strong>:</p>
+<ul>
+<li>We can be respond fast to the emergency</li>
+<li>We can make efficient use of our fleet</li>
+</ul>
+<p><strong>Because</strong>:</p>
+<ul>
+<li>Response time is essential</li>
+<li>Our resources are valuable</li>
+</ul>
+<h3 id="problem-definitions">Problem definitions</h3>
+<ul>
+<li>An emergency is defined by its
+<strong><em>location</em></strong></li>
+<li>An emergency happens in a point</li>
+<li>An emergency <strong><em>must</em></strong> have <strong><em>one and
+only one</em></strong> of the following states on any given time:
+<ul>
+<li>declared - <em>the initial state</em></li>
+<li>active - <em>it is on going</em></li>
+<li>concluded - <em>it has been handled</em></li>
+</ul></li>
+<li>We do not expect many emergencies, in the ballpark of tens per
+day</li>
+<li>Each emergency must be in Lesbos mainland.</li>
+<li>For a vehicle to be able to be assigned to it, it
+<strong><em>must</em></strong> have state <em>‘on duty’</em></li>
+<li>Each attached vehicle <strong><em>must</em></strong> have state
+<em>‘assigned’</em></li>
+<li>Each attached vehicle when detaches <strong><em>must</em></strong>
+have state <em>‘on duty’</em></li>
+<li>When the emergency concludes, all attached vehicles
+<strong><em>must</em></strong> be detached</li>
+</ul>
+<h2 id="the-base-relation">6.1 The base relation</h2>
+<p>Already from the problem definition becomes apparent that we can not
+express it all in a single relation. The base relation
+<strong><em>should</em></strong> contain:</p>
+<ul>
+<li>The location</li>
+<li>A human readable description</li>
+</ul>
+<p>The location <strong><em>must</em></strong> be valid. We can reuse
+the location check function from the previous chapter, provided that we
+maintain the same column definition.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> emergencies (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> serial <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    location geometry(POINT, <span class="dv">2100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>, <span class="co">-- The Hellenic SRID, EGSA87</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    description text <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    emergencies</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Base relation for emergencies&#39;</span>;</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    emergency_location_insert_check</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">BEFORE</span> <span class="kw">INSERT</span> <span class="kw">ON</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    emergencies</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    fn_location_check()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+</details>
+<h2 id="emergency-state">6.2 Emergency state</h2>
+<p>Similarly to the previous chapter, a dedicated enumerated type is
+needed as well as trigger to handle the initial state.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    emergency_state_enum </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span> ENUM (</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;declared&#39;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;active&#39;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;concluded&#39;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TYPE</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    emergency_state_enum</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;This enumerated type represents possible states \</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="st">     of an emergency&#39;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> emergency_state (</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    state_id serial <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    emergency_id <span class="dt">integer</span> <span class="kw">REFERENCES</span> emergencies (<span class="kw">id</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="fu">CURRENT_TIMESTAMP</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    state emergency_state_enum <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNIQUE</span> (emergency_id, <span class="dt">timestamp</span>, state)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    emergency_state</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;A log for the state of each emergency at a given time&#39;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> fn_emergency_initial_state()</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">TRIGGER</span> <span class="kw">AS</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        emergency_state (emergency_id, state)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">NEW</span>.<span class="kw">id</span>, <span class="st">&#39;declared&#39;</span>);</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql;</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    after_insert_emergency</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="kw">AFTER</span> <span class="kw">INSERT</span> <span class="kw">ON</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    emergencies</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> </span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    fn_emergency_initial_state();</span></code></pre></div>
+</details>
+<h2 id="assign-vehicle-to-emergency">6.3 Assign vehicle to
+emergency</h2>
+<p>The basic requirements as are expressed in the problem definition are
+easily expressed in the relation. It is possible though, for a vehicle
+to be assigned to an emergency, then decide that the vehicle was not
+needed, to then change her mind again and re-assign it. Adding an extra
+column to the design, will require minimum storage space but will
+greatly increase the flexibility of the feature.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TYPE</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    emergency_vehicles_enum </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span> ENUM (</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;attached&#39;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;detached&#39;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TYPE</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    emergency_vehicles_enum</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;This enumerated type represents possible states \</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="st">     of a vehicle taking part in an emergency&#39;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>;</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> emergency_vehicles (</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> serial <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    emergency_id <span class="dt">integer</span> <span class="kw">REFERENCES</span> emergencies (<span class="kw">id</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    vehicle_id <span class="dt">integer</span> <span class="kw">REFERENCES</span> vehicles (<span class="kw">id</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="fu">CURRENT_TIMESTAMP</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    status emergency_vehicles_enum <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMENT</span> <span class="kw">ON</span> <span class="kw">TABLE</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    emergency_vehicles</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">IS</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;A log for the vehicles assigned on an emergency at a given time&#39;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>;</span></code></pre></div>
+</details>
+<p>The more advanced requirement of a vehicle having a specific state in
+order to be able to be assigned on an emergency, then switching to a
+different state and maintaining both tables in sync, requires a more
+advanced implementation. The upside is that it is not fundamentally
+different from what we have seen so far.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> fn_emergency_vehicle_status()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">TRIGGER</span> <span class="kw">AS</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    vehicle_state_var vehicle_state<span class="dt">%ROWTYPE</span>;</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INTO</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        vehicle_state_var</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        vehicle_state</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        vehicle_id <span class="op">=</span> <span class="kw">NEW</span>.vehicle_id</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ORDER</span> <span class="kw">BY</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">LIMIT</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1</span>;</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">IF</span> <span class="kw">NOT</span> FOUND <span class="cf">THEN</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        RAISE <span class="kw">EXCEPTION</span> <span class="st">&#39;Vehicle (%) has no state&#39;</span>, <span class="kw">NEW</span>.vehicle_id;</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">ELSIF</span> vehicle_state_var.state <span class="op">!=</span> <span class="st">&#39;on duty&#39;</span> <span class="kw">AND</span> <span class="kw">NEW</span>.status <span class="op">=</span> <span class="st">&#39;attached&#39;</span> <span class="cf">THEN</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        RAISE <span class="kw">EXCEPTION</span> <span class="st">&#39;Vehicle (%) has invalid state (%)&#39;</span>, <span class="kw">NEW</span>.vehicle_id, vehicle_state_var.state</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>            <span class="kw">USING</span> HINT <span class="op">=</span> <span class="st">&#39;Valid state is &quot;on duty&quot;&#39;</span>;</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">ELSIF</span> vehicle_state_var.state <span class="op">!=</span> <span class="st">&#39;assigned&#39;</span> <span class="kw">AND</span> <span class="kw">NEW</span>.status <span class="op">=</span> <span class="st">&#39;detached&#39;</span> <span class="cf">THEN</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        RAISE <span class="kw">EXCEPTION</span> <span class="st">&#39;Vehicle (%) has invalid state (%)&#39;</span>, <span class="kw">NEW</span>.vehicle_id, vehicle_state_var.state</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>            <span class="kw">USING</span> HINT <span class="op">=</span> <span class="st">&#39;Valid state is &quot;assigned&quot;&#39;</span>;</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        vehicle_state (vehicle_id, state)</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span> (</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="kw">NEW</span>.vehicle_id,</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>        (<span class="cf">CASE</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>            <span class="cf">WHEN</span> <span class="kw">NEW</span>.status <span class="op">=</span> <span class="st">&#39;attached&#39;</span> <span class="cf">THEN</span> <span class="st">&#39;assigned&#39;</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">ELSE</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;on duty&#39;</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">END</span>):<span class="ch">:vehicle_state_enum</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql;</span></code></pre></div>
+</details>
+<p>Finally attach that function into a before insert trigger.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    before_assign_vehicle</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">BEFORE</span> <span class="kw">INSERT</span> <span class="kw">ON</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    emergency_vehicles</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    fn_assign_vehicle();</span></code></pre></div>
+</details>
+<h2 id="detach-vehicles-on-emergency-conclussion">6.4 Detach vehicles on
+emergency conclussion</h2>
+<p>The final requirement dictates that when the emergency concludes, all
+attached vehicles have to be marked as available for the next emergency
+with state <em>“on duty”</em>. Given our design, that means that when
+the emergency is marked as concluded in the emergency_state relation,
+then we have to find all the vehicles currently attached to that
+emergency and detach them by setting their status as <em>‘detached’</em>
+in the emergency_vehicles table. The act of detaching them, should fire
+the above trigger, which will take care the vehicle_state table for
+us.</p>
+<p>We have to be cautious to not select vehicles which might have been
+attached and then detached from the emergency.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> fn_conclude_emergency()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">TRIGGER</span> <span class="kw">AS</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    rec <span class="dt">record</span>;</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">FOR</span> rec <span class="kw">IN</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">SELECT</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            ev.vehicle_id,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            v.fleet_id</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">FROM</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            emergency_vehicles <span class="kw">AS</span> ev <span class="kw">JOIN</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>            vehicles v <span class="kw">ON</span> (</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                ev.vehicle_id <span class="op">=</span> v.<span class="kw">id</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">WHERE</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            (ev.vehicle_id, ev.<span class="dt">timestamp</span>) <span class="kw">IN</span> (</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                <span class="kw">SELECT</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                    vehicle_id,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">MAX</span>(<span class="dt">timestamp</span>)</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                <span class="kw">FROM</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                    emergency_vehicles</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                <span class="kw">WHERE</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>                    emergency_id <span class="op">=</span> <span class="kw">NEW</span>.emergency_id</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>                <span class="kw">GROUP</span> <span class="kw">BY</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>                    vehicle_id</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>            ) <span class="kw">AND</span> </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>            ev.status <span class="op">=</span> <span class="st">&#39;attached&#39;</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">LOOP</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>        RAISE NOTICE <span class="st">&#39;Vehicle with fleet_id % will be automatically detached from emergency %&#39;</span>, rec.fleet_id, <span class="kw">NEW</span>.emergency_id;</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">INSERT</span> <span class="kw">INTO</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>            emergency_vehicles (emergency_id, vehicle_id, status)</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        <span class="kw">VALUES</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">NEW</span>.emergency_id, rec.vehicle_id, <span class="st">&#39;detached&#39;</span>);</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="cf">LOOP</span>;</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>$body$</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql;</span></code></pre></div>
+</details>
+<p>Finally, attach that function in a trigger when the emergency is
+marked as <em>‘concluded’</em>.</p>
+<details>
+<summary>
+Implementation
+</summary>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    after_conclude_emergency</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">AFTER</span> <span class="kw">INSERT</span> <span class="kw">ON</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    emergency_state</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">WHEN</span> (<span class="kw">NEW</span>.state <span class="op">=</span> <span class="st">&#39;concluded&#39;</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    fn_conclude_emergency();</span></code></pre></div>
+</details>
+					<!-- Endi of Pandoc body -->
+					</div>
+			</div>
+
+			<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+				<p class="col-md-4 mb-0 text-body-secondary">
+					© 2025 Georgios Kokolatos
+				</p>
+				<p class="col-md-4 mb-0 text-body-secondary">
+					<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer">
+						CC BY-NC-SA 4.0
+					</a>
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt="">
+					<img  style="height:1em; margin-left:0.3em;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt="">
+				</p>
+				<ul class="nav col-md-4 justify-content-end">
+					<li class="nav-item">
+						<a href="#" class="nav-link px-2 text-body-secondary">Back to top</a>
+					</li>
+				</ul>
+			</footer>
+		</div>
+	</div>
+	<script src="./js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
