@@ -115,11 +115,14 @@ AS ENUM (
     'off duty',
     'assigned'
 );
-COMMENT ON TYPE
-    vehicle_state_enum
-IS
-    'This enumerated type represents possible states of a vehicle in the fleet'
-;
+COMMENT ON TYPE vehicle_state_enum IS
+'This enumerated type represents possible states of a vehicle in the fleet:
+ - commissioned: The vehicle is active and ready for assignment.
+ - decommissioned: The vehicle is currently not in active use.
+ - on duty: The vehicle is currently active in the field.
+ - off duty: The vehicle is idle.
+ - assigned: The vehicle has been assigned to an emergency.
+';
 ```
 </details>
 
