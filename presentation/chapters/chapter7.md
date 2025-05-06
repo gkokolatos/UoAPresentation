@@ -27,7 +27,8 @@ next_chapter:
 
 custom_toc:
   - {href: schema-testing, label: 7. Schema testing}
-  - {href: a-rudimentary-example, label: 7.1 A rudimentary example}
+  - {href: our-schema, label: 7.1 Our schema}
+  - {href: a-rudimentary-example, label: 7.2 A rudimentary example}
 ---
 
 # 7. Schema testing
