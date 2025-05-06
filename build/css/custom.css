@@ -1,0 +1,103 @@
+:root {
+	--base-font-size: 16px;
+	--base-margin: 1rem;
+	--base-padding: 1rem;
+	--base-margin-top: 1rem;
+	--base-margin-bottom: 1rem;
+	--base-padding-top: 1rem;
+	--base-padding-bottom: 1rem;
+	--max-width: 960px;
+	scroll-padding-top: 70px;
+}
+
+body {
+	font-size: var(--base-font-size);
+	line-height: 1.6;
+	display: flex;
+	flex-direction: column;
+}
+
+section {
+	scroll-margin-top: calc(var(--base-padding-top) * 2);
+}
+
+summary {
+	padding-top: calc(var(--base-padding-top) * 0.8);
+	padding-bottom: calc(var(--base-padding-bottom) * 1.2);
+	margin-bottom: calc(var(--base-margin-bottom) * 1.2);
+}
+
+.navbar {
+	font-size: 16px;
+}
+
+.container {
+	max-width: var(--max-width);
+}
+
+.content {
+	margin-bottom: var(--base-margin-bottom);
+	padding-bottom: var(--base-padding-bottom);
+}
+
+.h1, .h2, h1, h2 {
+	font-weight: 500;
+	margin-top: calc(var(--base-margin-top) + 1.5vw);
+	margin-bottom: var(--base-margin-bottom);
+}
+
+.h1, h1 {
+    font-size: calc(var(--base-font-size) + 1.5vw);
+}
+
+.h2, h2 {
+	font-size: calc(var(--base-font-size) + .9vw);
+}
+
+.h3, h3 {
+	font-size: calc(var(--base-font-size) + .6vw);
+}
+
+.h4, h4 {
+	font-size: calc(var(--base-font-size) + .4vw);
+}
+
+.h3, .h4, .h5, .h6, h3, h4, h5, h6 {
+	margin-top: var(--base-margin-top);
+	margin-bottom: var(--base-margin-bottom);
+	font-weight: 400;
+}
+
+.sourceCode .kw { color: #0117b8; }
+.sourceCode .dt { color: #a801b8; }
+.sourceCode .dv, .sourceCode .bn, .sourceCode .fl { color: #005076; }
+.sourceCode .ch { color: #910300; }
+.sourceCode .st { color: #2e7100; }
+.sourceCode .co { color: #202323; }
+.sourceCode .ot { color: #A57800; }
+.sourceCode .al { color: #CB4B16; font-weight: bold; }
+.sourceCode .fu { color: #b701c1; }
+.sourceCode .er { color: #D30102; font-weight: bold; }
+.sourceCode .ex { color: #b701c1; }
+.sourceCode .bu { color: #0121c8; }
+.sourceCode .va { color: #813a53; }
+.sourceCode .op { color: #9b0101; }
+.sourceCode .at { color: #0121c8; }
+.sourceCode .cf { color: #ce3601; }
+
+pre.sourceCode {
+	background-color: #F7F7F9;
+	overflow: auto;
+	font-family: 'Monaco', monospace;
+	padding: calc(var(--base-padding) * 1.5);
+	margin-top: var(--base-margin-top);
+	margin-bottom: var(--base-margin-bottom);
+	border-radius: 0.5em;
+	line-height: calc(var(--font-size) * 1.2);
+	font-size: calc(var(--font-size) * 1.2);
+}
+
+.navbar {
+	border-bottom-left-radius: 0.5em;
+	border-bottom-right-radius: 0.5em;
+}
