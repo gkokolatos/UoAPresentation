@@ -389,8 +389,8 @@ Identify what the allowed state transitions are.
                  +------------------+      |
                  |     off duty     |      |
                  +------------------+      |
-                   |            |          |
-                   v            v          |
+                   |  ^         |          |
+                   v  |         v          |
            +------------+   +--------------+---+
            |  on duty   |   |  decommissioned  |
            +------------+   +------------------+
