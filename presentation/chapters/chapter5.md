@@ -378,7 +378,31 @@ we can implement with almost everything we have seen so far.
 <details>
 <summary>Implementation</summary>
 
-Create and populate a helper table that records the allowed state transitions.
+Identify what the allowed state transitions are.
+
+```
+                 +------------------+
+                 |   commissioned   |<-----+
+                 +------------------+      |
+                          |                |
+                          v                |
+                 +------------------+      |
+                 |     off duty     |      |
+                 +------------------+      |
+                   |            |          |
+                   v            v          |
+           +------------+   +--------------+---+
+           |  on duty   |   |  decommissioned  |
+           +------------+   +------------------+
+                |   ^
+                v   |
+          +------------------+
+          |     assigned     |
+          +------------------+
+
+```
+
+Create and populate a helper table that records the transitions.
 
 ```sql
 CREATE TABLE valid_vehicle_state_transitions (
