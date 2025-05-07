@@ -26,13 +26,14 @@ next_chapter:
   title: Emergencies
 
 custom_toc:
-  - {href: vehicle-log, label: 5. Vehicle log}
+  - {href: vehicle-log, label: 5 Vehicle log}
   - {href: the-base-relation, label: 5.1 The base relation}
   - {href: possible-states, label: 5.2 Possible states}
   - {href: the-initial-state-problem, label: 5.3 The initial state problem}
   - {href: vehicle-location-log, label: 5.4 Vehicle location log}
   - {href: vehicle-location-validator, label: 5.5 Vehicle location validator}
   - {href: vehicle-location-archiver, label: 5.6 Vehicle location archiver}
+  - {href: reality-bites, label: 5.7 Reality bites}
 
 ---
 
@@ -364,3 +365,98 @@ SELECT
     );
 ```
 </details>
+
+## 5.7 Reality bites
+
+The observant reader would have spotted right now that our state guarantees are
+rather flimsy. Nothing can prevent from a deleting or updating a row, or marking
+vehicles into states that are not sensical. The first problem is solved by using
+privileges for users that restrict such actions. We will see one way to solve
+that later. The second problem requires a slightly more involved solution, which
+we can implement with almost everything we have seen so far.
+
+<details>
+<summary>Implementation</summary>
+
+Create and populate a helper table that records the allowed state transitions.
+
+```sql
+CREATE TABLE valid_vehicle_state_transitions (
+    from_state vehicle_state_enum NOT NULL,
+    to_state vehicle_state_enum NOT NULL,
+    PRIMARY KEY (from_state, to_state)
+);
+
+INSERT INTO
+    valid_vehicle_state_transitions (from_state, to_state)
+VALUES
+    ('commissioned', 'off duty'),
+    ('off duty', 'decommissioned'),
+    ('off duty', 'on duty'),
+    ('on duty', 'assigned'),
+    ('on duty', 'off duty'),
+    ('assigned', 'on duty'),
+    ('decommissioned', 'commissioned')
+;
+```
+
+Then create a Finite State Machine function to check the new vehicle_state
+against the valid transitions table.
+
+```sql
+CREATE OR REPLACE FUNCTION fn_state_fsm_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+	previous_state    vehicle_state.state%TYPE;
+	next_state        vehicle_state.state%TYPE := NEW.state;
+	is_valid          BOOLEAN := FALSE;
+BEGIN
+	SELECT
+        state INTO previous_state
+	FROM
+        vehicle_state
+	WHERE
+        vehicle_id = NEW.vehicle_id
+	ORDER BY
+        timestamp DESC
+	LIMIT 1;
+
+	IF previous_state IS NULL THEN
+		IF next_state <> 'commissioned' THEN
+		    RAISE EXCEPTION 'Invalid state transition for vehicle %: NULL → %',
+				NEW.vehicle_id, next_state
+            USING HINT = 'Initial state must be "commissioned"';
+		END IF;
+		RETURN NEW;
+	END IF;
+
+    PERFORM
+        1
+    FROM
+        valid_vehicle_state_transitions
+    WHERE
+        from_state = previous_state AND
+        to_state = next_state;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Invalid state transition for vehicle %: % → %',
+            NEW.vehicle_id, previous_state, next_state;
+    END IF;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+Finally, attach it to a before insert into vehicle_state trigger.
+
+```sql
+CREATE TRIGGER
+    before_insert_vehicle_state
+BEFORE INSERT ON
+    vehicle_state
+FOR EACH ROW EXECUTE FUNCTION 
+    fn_state_fsm_insert();
+
+```
+</summary>
